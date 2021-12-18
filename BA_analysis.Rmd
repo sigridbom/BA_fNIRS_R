@@ -13,56 +13,8 @@ knitr::opts_chunk$set(echo = TRUE)
 pacman::p_load(tidyverse, lme4, sjmisc, lmerTest)
 ```
 
+shift + control + option + M = ændr samme value flere steder i samme chunk
 # Testing - ignore
-
-```{r testing}
-file = read_csv('data_frames/df_aud_0.csv')
-
-file_name = 'data_frames/df_aud_0.csv'
-
-# get correct time interval, from 0 - 7 seconds
-file <- file %>%
-  filter(
-    time >= 0 & time < 7000
-  ) %>% 
-  # delete first two columns by col name
-  select(
-    -c('...1', 'time')
-  )
-
-# get means per column and make dataframe wide
-file <- file %>% 
-  colMeans() %>% 
-  as.data.frame()
-
-rows = rownames(file) 
-
-test <- file %>% 
-  pivot_wider(
-  )
-
-
-  pivot_wider(
-    id_cols
-  )
-  #data.frame %>% 
-  #pivot_wider()
-
-# make column with ID (aud/vis + no)
-test <- file %>% mutate(
-  subject = str_extract(file_name, "\\d+")
-  contrast = str_extract
-)
-
-test2 = str_extract(file_name, "\\df([/s/S]*)")
-test2 = str_extract(file_name, "\\b\\w")
-test2 = str_extract(file_name, starts_with("\\df_"))
-
-
-[^a]*$/
-
-```
-
 ```{r testing}
 conditions = c('Auditory/pos', ...)
 for i in range(subjects){
