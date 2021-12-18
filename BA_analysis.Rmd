@@ -1,0 +1,568 @@
+---
+title: "BA_analysis"
+author: "Sigrid Agersnap Bom Nielsen"
+date: "18/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages}
+pacman::p_load(tidyverse, lme4, sjmisc)
+```
+
+# Testing
+
+```{r testing}
+file = read_csv('data_frames/df_aud_0.csv')
+
+file_name = 'data_frames/df_aud_0.csv'
+
+# get correct time interval, from 0 - 7 seconds
+file <- file %>%
+  filter(
+    time >= 0 & time < 7000
+  ) %>% 
+  # delete first two columns by col name
+  select(
+    -c('...1', 'time')
+  )
+
+# get means per column and make dataframe wide
+file <- file %>% 
+  colMeans() %>% 
+  as.data.frame()
+
+rows = rownames(file) 
+
+test <- file %>% 
+  pivot_wider(
+  )
+
+
+  pivot_wider(
+    id_cols
+  )
+  #data.frame %>% 
+  #pivot_wider()
+
+# make column with ID (aud/vis + no)
+test <- file %>% mutate(
+  subject = str_extract(file_name, "\\d+")
+  contrast = str_extract
+)
+
+test2 = str_extract(file_name, "\\df([/s/S]*)")
+test2 = str_extract(file_name, "\\b\\w")
+test2 = str_extract(file_name, starts_with("\\df_"))
+
+
+[^a]*$/
+
+```
+
+```{r}
+conditions = c('Auditory/pos', ...)
+for i in range(subjects){
+  d1 = data_frame()
+  for j in range(conditions){
+    d2 <- read_csv("data_frames/df_epochs_aud_neg0-kopi.csv")
+    
+    
+  }
+  d1 = rbind(d1,d2)
+  d1$ID = i
+}
+
+?rbind
+
+summary(d2)
+```
+
+
+```{r testing}
+
+file_name = 'df_epochs_aud_neg0.csv'
+data <- read_csv(paste0("data_frames/",file_name))
+
+epochs = unique(data$epoch)
+
+# get correct time interval, from 0 - 7 seconds
+data <- data %>%
+  filter(
+    time < 0
+    #time >= 0 & time <= 7000
+  )# %>% 
+  # delete first two columns by col name
+  select(
+    -c('...1', 'time')
+  )
+
+df = data.frame()
+
+# for loop 
+for (epoch_no in epochs){
+  d = data %>% filter(epoch == epoch_no)
+  
+  cond = d$condition[1]
+  
+  d <- d %>% 
+  select(
+    -c(condition)
+  )
+
+  d = colMeans(d)
+  d <- d %>% t() %>% data.frame
+  
+  d <- d %>% mutate(
+  subject = str_extract(file_name, "\\d+"),
+  cond = cond
+  )
+
+  df = rbind(df, d)
+}
+
+
+d <- d1 %>% 
+  select(
+    -c(condition)
+  )
+
+  )
+d_test <- colMeans(d)
+
+d_test <- d_test %>% t() %>% data.frame
+
+
+test <- d_test %>% mutate(
+  subject = str_extract(file_name, "\\d+")
+  )
+
+```
+
+# Load data and calculate means
+
+```{r function}
+load_data <- function(file_name){
+  print(file_name)
+  df_temp = data.frame()
+  
+  data <- read_csv(paste0("data_frames/",file_name))
+  
+  epochs = unique(data$epoch)
+  
+  # get correct time interval, from 0 - 7 seconds
+  data <- data %>%
+    filter(
+      time >= 0 & time <= 7000
+    ) %>% 
+    # delete first two columns by col name
+    select(
+      -c('...1', 'time')
+  )
+  
+  # for loop 
+  for (epoch_no in epochs){
+    d = data %>% filter(epoch == epoch_no)
+    
+    cond = d$condition[1]
+    
+    d <- d %>% 
+    select(
+      -c(condition)
+    )
+  
+    d = colMeans(d)
+    d <- d %>% t() %>% data.frame
+    
+    d <- d %>% mutate(
+    subject = str_extract(file_name, "\\d+"),
+    cond = cond
+    )
+
+    df_temp = rbind(df_temp, d)
+  }
+  
+  return(df_temp)
+}
+
+file_name = 'df_epochs_aud_neg0.csv'
+
+```
+
+```{r loop through function - df_full}
+# loop through all dataframes
+df = list.files(path = 'data_frames/', pattern = 'csv') %>% 
+  purrr::map_df(load_data)
+```
+
+```{r rearranging cols - df_full}
+
+df_p <- df %>% select(
+  c(cond, subject)
+)
+
+df_test <- df %>% 
+  select(
+    -c(cond, subject)
+  )
+
+df <- cbind(df_p, df_test)
+
+df <- df_pretty %>% 
+  mutate(
+    subject = as.factor(subject)
+  )
+```
+
+```{r write to csv}
+write_csv(df, "df_full.csv")
+```
+
+# Load baseline data - to check model
+
+```{r baseline function}
+
+load_data_baseline <- function(file_name){
+  print(file_name)
+  df_temp = data.frame()
+  
+  data <- read_csv(paste0("data_frames/",file_name))
+  
+  epochs = unique(data$epoch)
+
+  
+  # get correct time interval, from 0 - 7 seconds
+  data <- data %>%
+    filter(
+      time < 0
+    )
+  # saving time for later to check  
+  time_stamp = mean(data$time)
+  
+  data <- data %>% 
+    #print(time) %>% 
+    # delete first two columns by col name
+    select(
+      -c('...1', 'time')
+  )
+  
+  # for loop 
+  for (epoch_no in epochs){
+    print(file_name)
+    d = data %>% filter(epoch == epoch_no)
+    
+    cond = d$condition[1]
+    
+    d <- d %>% 
+    select(
+      -c(condition)
+    )
+  
+    d = colMeans(d)
+    d <- d %>% t() %>% data.frame
+    
+    d <- d %>% mutate(
+    subject = str_extract(file_name, "\\d+"),
+    cond = cond,
+    )
+
+    df_temp = rbind(df_temp, d)
+  }
+  
+  return(df_temp)
+}
+```
+
+```{r loop through baseline function}
+# loop through all dataframes
+df_baseline = list.files(path = 'data_frames/', pattern = 'csv') %>% 
+  purrr::map_df(load_data_baseline)
+# tager < 10 min at køre
+# check, den vælger faktisk de negative 'time' værdier..
+```
+
+```{r rearranging cols - df_baseline}
+
+df_cs <- df_baseline %>% select(
+  c(cond, subject)
+)
+
+df_no_cs <- df_baseline %>% 
+  select(
+    -c(cond, subject)
+  )
+
+df_baseline <- cbind(df_cs, df_no_cs)
+
+df_baseline <- df_baseline %>% 
+  mutate(
+    subject = as.factor(subject)
+  )
+```
+
+```{r write to csv df_baseline}
+write_csv(df_baseline, "df_baseline.csv")
+```
+
+# Rearranging dataframe 
+## H1 auditory vs visual - real data
+```{r pivot longer}
+df_long <- df %>% 
+  pivot_longer(
+    cols = contains('hbo') | contains ('hbr'),
+    names_to = 'cha_name',
+    values_to = 'theta'
+  )
+```
+
+```{r make columns}
+# make different columns
+df_long <- df_long %>% mutate(
+  chroma = ifelse(grepl('hbo',cha_name), 'hbo', 'hbr'), 
+  trial = ifelse(grepl('Auditory',cond), 'aud', 'vis')
+)
+```
+
+```{r}
+# creating ROIs
+df_long <- df_long %>% mutate(
+  ROI = ifelse(
+    # visual ROIs
+    grepl('S15_D14', cha_name) | 
+    grepl('S15_D15', cha_name) |
+      
+    grepl('S14_D14', cha_name) |
+    grepl('S14_D13', cha_name) |
+      
+    grepl('S16_D14', cha_name) |
+    grepl('S16_D13', cha_name) |
+    grepl('S16_D15', cha_name) |
+    grepl('S16_D16', cha_name) |
+      
+    grepl('S29_D13', cha_name) |
+    grepl('S29_D16', cha_name) |
+    grepl('S29_D28', cha_name) |
+      
+    grepl('S31_D15', cha_name) |
+    grepl('S31_D16', cha_name) |
+    grepl('S31_D30', cha_name) |
+      
+    grepl('S30_D16', cha_name) |
+    grepl('S30_D28', cha_name) |
+    grepl('S30_D30', cha_name) |
+    grepl('S30_D29', cha_name) |
+      
+    grepl('S27_D28', cha_name) |
+    grepl('S27_D29', cha_name) |
+      
+    grepl('S32_D30', cha_name) |
+    grepl('S32_D29', cha_name)
+  , 'vis', 'temp'),
+  
+  ROI = ifelse(
+    # auditory ROIs
+    grepl('S7_D4', cha_name) | 
+    grepl('S7_D6', cha_name) |
+      
+    grepl('S9_D6', cha_name) |
+    grepl('S9_D8', cha_name) |
+    grepl('S9_D10', cha_name) |
+      
+    grepl('S11_D8', cha_name) |
+    grepl('S11_D10', cha_name) |
+    grepl('S11_D11', cha_name) |
+      
+    grepl('S22_D19', cha_name) |
+    grepl('S22_D21', cha_name) |
+    grepl('S22_D23', cha_name) |
+      
+    grepl('S24_D21', cha_name) |
+    grepl('S24_D23', cha_name) |
+    grepl('S24_D25', cha_name) |
+      
+    grepl('S26_D23', cha_name) |
+    grepl('S26_D25', cha_name) |
+    grepl('S26_D26', cha_name) |
+      
+    grepl('S28_D26', cha_name) |
+    grepl('S28_D25', cha_name) |
+    grepl('S28_D27', cha_name)
+  , 'aud', ROI)
+  )
+```
+
+```{r remove temp ROIs}
+# removing irrelevant ROIs
+df_long <- df_long %>% 
+  filter(
+    ROI != 'temp'
+  )
+
+# change classes
+df_long <- df_long %>% 
+  mutate(
+    chroma = as.factor(chroma),
+    trial= as.factor(trial),
+    ROI = as.factor(ROI)
+  )
+```
+
+
+# Rearranging dataframe - BASELINE
+## H1 auditory vs visual baseline
+```{r pivot longer baseline}
+
+df_long_baseline <- df_baseline %>% 
+  pivot_longer(
+    cols = contains('hbo') | contains ('hbr'),
+    names_to = 'cha_name',
+    values_to = 'theta'
+  )
+
+#make columns
+# make different columns
+df_long_baseline <- df_long_baseline %>% mutate(
+  chroma = ifelse(grepl('hbo',cha_name), 'hbo', 'hbr'), 
+  trial = ifelse(grepl('Auditory',cond), 'aud', 'vis')
+)
+
+# creating ROIs
+df_long_baseline <- df_long_baseline %>% mutate(
+  ROI = ifelse(
+    # visual ROIs
+    grepl('S15_D14', cha_name) | 
+    grepl('S15_D15', cha_name) |
+      
+    grepl('S14_D14', cha_name) |
+    grepl('S14_D13', cha_name) |
+      
+    grepl('S16_D14', cha_name) |
+    grepl('S16_D13', cha_name) |
+    grepl('S16_D15', cha_name) |
+    grepl('S16_D16', cha_name) |
+      
+    grepl('S29_D13', cha_name) |
+    grepl('S29_D16', cha_name) |
+    grepl('S29_D28', cha_name) |
+      
+    grepl('S31_D15', cha_name) |
+    grepl('S31_D16', cha_name) |
+    grepl('S31_D30', cha_name) |
+      
+    grepl('S30_D16', cha_name) |
+    grepl('S30_D28', cha_name) |
+    grepl('S30_D30', cha_name) |
+    grepl('S30_D29', cha_name) |
+      
+    grepl('S27_D28', cha_name) |
+    grepl('S27_D29', cha_name) |
+      
+    grepl('S32_D30', cha_name) |
+    grepl('S32_D29', cha_name)
+  , 'vis', 'temp'),
+  
+  ROI = ifelse(
+    # auditory ROIs
+    grepl('S7_D4', cha_name) | 
+    grepl('S7_D6', cha_name) |
+      
+    grepl('S9_D6', cha_name) |
+    grepl('S9_D8', cha_name) |
+    grepl('S9_D10', cha_name) |
+      
+    grepl('S11_D8', cha_name) |
+    grepl('S11_D10', cha_name) |
+    grepl('S11_D11', cha_name) |
+      
+    grepl('S22_D19', cha_name) |
+    grepl('S22_D21', cha_name) |
+    grepl('S22_D23', cha_name) |
+      
+    grepl('S24_D21', cha_name) |
+    grepl('S24_D23', cha_name) |
+    grepl('S24_D25', cha_name) |
+      
+    grepl('S26_D23', cha_name) |
+    grepl('S26_D25', cha_name) |
+    grepl('S26_D26', cha_name) |
+      
+    grepl('S28_D26', cha_name) |
+    grepl('S28_D25', cha_name) |
+    grepl('S28_D27', cha_name)
+  , 'aud', ROI)
+  )
+
+# remove temp ROIs
+# removing irrelevant ROIs
+df_long_baseline <- df_long_baseline %>% 
+  filter(
+    ROI != 'temp'
+  )
+
+# change classes
+df_long_baseline <- df_long_baseline %>% 
+  mutate(
+    chroma = as.factor(chroma),
+    trial= as.factor(trial),
+    ROI = as.factor(ROI)
+  )
+```
+
+# Building model
+
+```{r}
+# null model
+m0 <- lmer(theta ~ 1 + (1|subject), df_long, REML = F)
+summary(m0)
+
+pacman::p_load(lmerTest)
+# real model
+m1 <- lmer(theta ~ 1 + trial:ROI:chroma + (1|subject), df_long, REML = F)
+summary(m1)
+
+
+# baseline model
+m2 <- lmer(theta ~ 1 + trial:ROI:chroma + (1|subject), df_long_baseline, REML = F)
+summary(m1)
+summary(m2)
+```
+
+```{r checking assumptions}
+# checking assumptions with diagnostic plots
+qqnorm(resid(m1))
+plot(m1)
+```
+
+
+```{r}
+# FOR H3 
+# remove 'neu'
+df_long2 <- df_long %>% filter(
+  grepl('pos', cond) | grepl('neg', cond))
+
+
+```
+
+```{r}
+test <- str_contains(test_long$cha_name, 'hbr')
+test
+```
+
+
+```{r}
+# example of pivot_longer - to be used shortly
+# manipulate dataframe, only containing sentiment compound score
+df_long_2 <- d %>% 
+  select(-c(
+    headline_sentiment_but, text_sentiment_but
+    )) %>% 
+  pivot_longer(
+    cols = contains('comp'),
+    names_to = 'sent_type',
+    values_to = 'sent_score'
+  )
+```
+
