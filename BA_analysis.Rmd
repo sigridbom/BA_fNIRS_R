@@ -10,10 +10,10 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r packages}
-pacman::p_load(tidyverse, lme4, sjmisc)
+pacman::p_load(tidyverse, lme4, sjmisc, lmerTest)
 ```
 
-# Testing
+# Testing - ignore
 
 ```{r testing}
 file = read_csv('data_frames/df_aud_0.csv')
@@ -63,7 +63,7 @@ test2 = str_extract(file_name, starts_with("\\df_"))
 
 ```
 
-```{r}
+```{r testing}
 conditions = c('Auditory/pos', ...)
 for i in range(subjects){
   d1 = data_frame()
@@ -141,8 +141,9 @@ test <- d_test %>% mutate(
   )
 
 ```
+# the real deal
 
-# Load data and calculate means
+## Load data and calculate means
 
 ```{r function}
 load_data <- function(file_name){
@@ -217,11 +218,11 @@ df <- df_pretty %>%
   )
 ```
 
-```{r write to csv}
+```{r write to csv df_full}
 write_csv(df, "df_full.csv")
 ```
 
-# Load baseline data - to check model
+## Load baseline data - to check model
 
 ```{r baseline function}
 
@@ -307,8 +308,9 @@ df_baseline <- df_baseline %>%
 write_csv(df_baseline, "df_baseline.csv")
 ```
 
-# Rearranging dataframe 
-## H1 auditory vs visual - real data
+# Rearranging dataframes (H1, aud vs. vis)
+## 'Real' data rearrange
+
 ```{r pivot longer}
 df_long <- df %>% 
   pivot_longer(
@@ -326,7 +328,7 @@ df_long <- df_long %>% mutate(
 )
 ```
 
-```{r}
+```{r creating ROIs}
 # creating ROIs
 df_long <- df_long %>% mutate(
   ROI = ifelse(
@@ -411,9 +413,8 @@ df_long <- df_long %>%
 ```
 
 
-# Rearranging dataframe - BASELINE
-## H1 auditory vs visual baseline
-```{r pivot longer baseline}
+## BASELINE rearrange
+```{r df_long_baseline}
 
 df_long_baseline <- df_baseline %>% 
   pivot_longer(
@@ -513,7 +514,7 @@ df_long_baseline <- df_long_baseline %>%
 
 # Building model
 
-```{r}
+```{r models}
 # null model
 m0 <- lmer(theta ~ 1 + (1|subject), df_long, REML = F)
 summary(m0)
@@ -523,9 +524,9 @@ pacman::p_load(lmerTest)
 m1 <- lmer(theta ~ 1 + trial:ROI:chroma + (1|subject), df_long, REML = F)
 summary(m1)
 
-
 # baseline model
 m2 <- lmer(theta ~ 1 + trial:ROI:chroma + (1|subject), df_long_baseline, REML = F)
+
 summary(m1)
 summary(m2)
 ```
@@ -534,35 +535,18 @@ summary(m2)
 # checking assumptions with diagnostic plots
 qqnorm(resid(m1))
 plot(m1)
+
+qqnorm(resid(m2))
+plot(m2)
 ```
+# Pos vis/aud versus neg vis/aud - whole brain
 
-
-```{r}
+```{r df_long2}
 # FOR H3 
 # remove 'neu'
 df_long2 <- df_long %>% filter(
   grepl('pos', cond) | grepl('neg', cond))
 
 
-```
-
-```{r}
-test <- str_contains(test_long$cha_name, 'hbr')
-test
-```
-
-
-```{r}
-# example of pivot_longer - to be used shortly
-# manipulate dataframe, only containing sentiment compound score
-df_long_2 <- d %>% 
-  select(-c(
-    headline_sentiment_but, text_sentiment_but
-    )) %>% 
-  pivot_longer(
-    cols = contains('comp'),
-    names_to = 'sent_type',
-    values_to = 'sent_score'
-  )
 ```
 
