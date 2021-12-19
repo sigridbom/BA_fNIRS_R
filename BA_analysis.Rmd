@@ -93,7 +93,7 @@ test <- d_test %>% mutate(
   )
 
 ```
-# the real deal
+# Get data
 
 ## Load data and calculate means
 
@@ -318,8 +318,8 @@ df_long <- df_long %>% mutate(
   
   ROI = ifelse(
     # auditory ROIs
-    grepl('S7_D4', cha_name) | 
-    grepl('S7_D6', cha_name) |
+    grepl('S7_D6', cha_name) | 
+    grepl('S7_D8', cha_name) | 
       
     grepl('S9_D6', cha_name) |
     grepl('S9_D8', cha_name) |
@@ -329,7 +329,10 @@ df_long <- df_long %>% mutate(
     grepl('S11_D10', cha_name) |
     grepl('S11_D11', cha_name) |
       
-    grepl('S22_D19', cha_name) |
+    grepl('S13_D10', cha_name) |
+    grepl('S13_D11', cha_name) |
+    grepl('S13_D12', cha_name) |
+      
     grepl('S22_D21', cha_name) |
     grepl('S22_D23', cha_name) |
       
@@ -426,8 +429,8 @@ df_long_baseline <- df_long_baseline %>% mutate(
   
   ROI = ifelse(
     # auditory ROIs
-    grepl('S7_D4', cha_name) | 
-    grepl('S7_D6', cha_name) |
+    grepl('S7_D6', cha_name) | 
+    grepl('S7_D8', cha_name) | ## FEHL FUNDET- skal være S7 D6 og S7 D8
       
     grepl('S9_D6', cha_name) |
     grepl('S9_D8', cha_name) |
@@ -437,7 +440,10 @@ df_long_baseline <- df_long_baseline %>% mutate(
     grepl('S11_D10', cha_name) |
     grepl('S11_D11', cha_name) |
       
-    grepl('S22_D19', cha_name) |
+    grepl('S13_D10', cha_name) |
+    grepl('S13_D11', cha_name) |
+    grepl('S13_D12', cha_name) |
+      
     grepl('S22_D21', cha_name) |
     grepl('S22_D23', cha_name) |
       
@@ -479,7 +485,7 @@ df_long_baseline_hbr <- df_long_baseline %>%
 ```
 
 # Building model
-
+# Real data
 ```{r models}
 # null model
 m0 <- lmer(theta ~ 1 + (1|subject) + (1|cha_name), df_long_hbo, REML = F)
@@ -501,7 +507,7 @@ m1 <- lmer(theta ~ 1 + trial:ROI:chroma + (1|subject), df_long_hbo, REML = F)
 summary(m1)
 ```
 ## Post-hoc analysis
-```{r}
+```{r post hoc}
 # emm_options(lmerTest.limit = 10854)
 # emm_options(disable.pbkrtest = TRUE)
 emm_roi <- emmeans(m3, pairwise ~ ROI)
@@ -530,7 +536,7 @@ rbind(IC_IC_trial.roi)
 confint(rbind(IC_IC_trial.roi))
 ```
 
-```{r}
+```{r plot test}
 # trying to plot df_long_hbo
 
 df_long_hbo %>% mutate(
@@ -563,9 +569,9 @@ df_long_hbo %>% mutate(
 ```
 
 
-```{r}
+```{r best plot}
 #new try
-df_long_hbr %>% 
+df_long_hbo %>% 
     group_by(
   ROI, trial
   ) %>% 
@@ -579,7 +585,7 @@ df_long_hbr %>%
   coord_cartesian(ylim = c(-.2, 2))
 ```
 
-```{r}
+```{r means}
 test <- df_long_hbr %>% filter(ROI == 'aud', trial == 'aud_stim')
 test2 <- df_long_hbr %>% filter(ROI == 'aud', trial == 'vis_stim')
 
@@ -608,7 +614,7 @@ df_long_baseline_hbr %>%
 
 
 
-```{r}
+```{r plot inspi from other markdown}
 df_long_2  %>% 
   group_by(sent_type) %>% 
   ggplot() +
@@ -645,18 +651,366 @@ summary(m2)
 qqnorm(resid(m3))
 plot(m3)
 
-qqnorm(resid(m2))
-plot(m2)
+qqnorm(resid(m3))
+plot(m3)
 ```
 
 # Pos vis/aud versus neg vis/aud - whole brain
 
-```{r df_long2}
+```{r create df_long2}
 # FOR H3 
-# remove 'neu'
-df_long2 <- df_long %>% filter(
-  grepl('pos', cond) | grepl('neg', cond))
+df_long2_start <- df_long # (must be done after pivot_longer)
 
+# creating new columns
+df_long2 <- df_long2_start %>% mutate(
+  chroma = ifelse(grepl('hbo',cha_name), 'hbo', 'hbr'), 
+  trial = ifelse(grepl('Auditory',cond), 'aud_stim', 'vis_stim'),
+  valence = ifelse(grepl('neg', cond), 'neg', 'temp'),
+  valence = ifelse(grepl('pos', cond), 'pos', valence),
+  valence = ifelse(grepl('neu', cond), 'neu', valence)
+  )
+
+# creating ROIs
+df_long2 <- df_long2 %>% mutate(
+  ROI = ifelse(
+    # visual ROIs
+    grepl('S15_D14', cha_name) | 
+    grepl('S15_D15', cha_name) |
+      
+    grepl('S14_D14', cha_name) |
+    grepl('S14_D13', cha_name) |
+      
+    grepl('S16_D14', cha_name) |
+    grepl('S16_D13', cha_name) |
+    grepl('S16_D15', cha_name) |
+    grepl('S16_D16', cha_name) |
+      
+    grepl('S29_D13', cha_name) |
+    grepl('S29_D16', cha_name) |
+    grepl('S29_D28', cha_name) |
+      
+    grepl('S31_D15', cha_name) |
+    grepl('S31_D16', cha_name) |
+    grepl('S31_D30', cha_name) |
+      
+    grepl('S30_D16', cha_name) |
+    grepl('S30_D28', cha_name) |
+    grepl('S30_D30', cha_name) |
+    grepl('S30_D29', cha_name) |
+      
+    grepl('S27_D28', cha_name) |
+    grepl('S27_D29', cha_name) |
+      
+    grepl('S32_D30', cha_name) |
+    grepl('S32_D29', cha_name)
+  , 'vis', 'temp'),
+  
+  ROI = ifelse(
+    # auditory ROIs
+    grepl('S7_D6', cha_name) | 
+    grepl('S7_D8', cha_name) | ## FEHL FUNDET- skal være S7 D6 og S7 D8
+      
+    grepl('S9_D6', cha_name) |
+    grepl('S9_D8', cha_name) |
+    grepl('S9_D10', cha_name) |
+      
+    grepl('S11_D8', cha_name) |
+    grepl('S11_D10', cha_name) |
+    grepl('S11_D11', cha_name) |
+      
+    grepl('S13_D10', cha_name) |
+    grepl('S13_D11', cha_name) |
+    grepl('S13_D12', cha_name) |
+      
+    grepl('S22_D21', cha_name) |
+    grepl('S22_D23', cha_name) |
+      
+    grepl('S24_D21', cha_name) |
+    grepl('S24_D23', cha_name) |
+    grepl('S24_D25', cha_name) |
+      
+    grepl('S26_D23', cha_name) |
+    grepl('S26_D25', cha_name) |
+    grepl('S26_D26', cha_name) |
+      
+    grepl('S28_D26', cha_name) |
+    grepl('S28_D25', cha_name) |
+    grepl('S28_D27', cha_name)
+  , 'aud', ROI),
+  
+  ROI = ifelse(
+    # frontal ROIs
+    grepl('S4_D4', cha_name) | 
+      
+    grepl('S2_D4', cha_name) |
+    grepl('S2_D1', cha_name) |
+      
+    grepl('S3_D4', cha_name) |
+    grepl('S3_D1', cha_name) |
+    grepl('S3_D2', cha_name) |
+      
+    grepl('S5_D4', cha_name) |
+    grepl('S5_D3', cha_name) |
+      
+    grepl('S1_D1', cha_name) |
+    grepl('S1_D2', cha_name) |
+    grepl('S1_D17', cha_name) |
+      
+    grepl('S6_D3', cha_name) |
+    grepl('S6_D2', cha_name) |
+    grepl('S6_D18', cha_name) |
+      
+    grepl('S17_D2', cha_name) |
+    grepl('S17_D17', cha_name) |
+    grepl('S17_D19', cha_name) |
+      
+    grepl('S19_D18', cha_name) |
+    grepl('S19_D19', cha_name) |
+      
+    grepl('S18_D17', cha_name) |
+    grepl('S18_D19', cha_name) |
+      
+    grepl('S20_D19', cha_name)
+  , 'front', ROI)
+  )
+
+# removing irrelevant ROIs
+df_long2 <- df_long2 %>% 
+  filter(
+    ROI != 'temp'
+  )
+```
+
+
+```{r create df_long2_int}
+##################### testing intensity
+
+df_long2_int <- df_long2 %>% 
+  mutate(
+    intensity_high_low = 
+      ifelse(
+      grepl('neu', valence),
+      'low', 'high'
+    ),
+    intensity = valence
+  )
+    
+# change classes
+df_long2_int <- df_long2_int %>% 
+  mutate(
+    chroma = as.factor(chroma),
+    trial= as.factor(trial),
+    ROI = as.factor(ROI),
+    valence = as.factor(valence),
+    intensity = as.factor(intensity)
+  )
+
+# separate hbo and hbr
+df_long2_int_hbo <- df_long2_int %>% 
+  filter(chroma == 'hbo')
+
+df_long2_int_hbr <- df_long2_int %>% 
+  filter(chroma == 'hbr')
+
+
+```
+
+```{r create df_long2 - valence}
+##################### testing valence
+# remove 'neu'
+df_long2 <- df_long2 %>% 
+  filter(
+    valence != 'neu'
+)
+
+# change classes
+df_long2 <- df_long2 %>% 
+  mutate(
+    chroma = as.factor(chroma),
+    trial= as.factor(trial),
+    ROI = as.factor(ROI),
+    valence = as.factor(valence)
+  )
+
+# separate hbo and hbr
+df_long2_hbo <- df_long2 %>% 
+  filter(chroma == 'hbo')
+
+df_long2_hbr <- df_long2 %>% 
+  filter(chroma == 'hbr')
+
+```
+
+## model valence
+
+```{r df_long2 modelling - valence}
+# null model
+m0 <- lmer(theta ~ 1 + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
+#summary(m0)
+
+m1 <- lmer(theta ~ valence + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
+#summary(m1)
+
+m2 <- lmer(theta ~ valence + trial + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
+#summary(m2)
+
+m3 <- lmer(theta ~ valence + trial + ROI + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
+
+m4 <- lmer(theta ~ valence*trial + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
+
+m4_5 <- lmer(theta ~ valence*ROI + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
+
+m5 <- lmer(theta ~ valence*trial*ROI + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
+
+anova(m0, m1, m2, m3, m4, m4_5, m5)
+```
+```{r assumptions check}
+qqnorm(resid(m1))
+plot(m1)
+```
+
+
+```{r df_long2 plot valence}
+
+df_long2_hbo %>% 
+    group_by(
+  ROI, trial, valence
+  ) %>% 
+  ggplot() +
+  aes(
+    x = valence, y = theta, color = trial) +
+  stat_summary(
+    fun = 'mean', geom = 'point', size = 2) + 
+    stat_summary(fun.data = "mean_se", geom = 'errorbar', width = .1) +
+    stat_summary(fun = 'mean', geom = 'line', color = 'gray55', aes(group = trial)) + 
+  coord_cartesian(ylim = c(-.2, 2.5))
+
+
+# other plot - from anova - main effect of valence
+df_long2_hbo %>% 
+    group_by(
+  ROI, trial, valence
+  ) %>% 
+  ggplot() +
+  aes(
+    x = valence, y = theta, color = valence) +
+  stat_summary(
+    fun = 'mean', geom = 'point', size = 2) + 
+    stat_summary(fun.data = "mean_se", geom = 'errorbar', width = .1) +
+    stat_summary(fun = 'mean', geom = 'line', color = 'gray55', aes(group = 1)) + 
+  coord_cartesian(ylim = c(0, 2.5)) + 
+  theme(legend.position = 'none')
+```
+
+```{r df_long2 posthoc}
+
+```
+
+## modeling intensity
+
+```{r df_long2_int modelling}
+# null model
+m0 <- lmer(theta ~ 1 + (1|subject) + (1|cha_name), df_long2_int_hbo, REML = F)
+#summary(m0)
+
+m1 <- lmer(theta ~ intensity + (1|subject) + (1|cha_name), df_long2_int_hbo, REML = F)
+#summary(m1)
+
+m2 <- lmer(theta ~ intensity + ROI + (1|subject) + (1|cha_name), df_long2_int_hbo, REML = F)
+#summary(m2)
+
+m3 <- lmer(theta ~ intensity + ROI + trial + (1|subject) + (1|cha_name), df_long2_int_hbo, REML = F)
+
+m4 <- lmer(theta ~ intensity*ROI + (1|subject) + (1|cha_name), df_long2_int_hbo, REML = F)
+
+m5 <- lmer(theta ~ intensity*trial*ROI + (1|subject) + (1|cha_name), df_long2_int_hbo, REML = F)
+
+anova(m0, m1, m2, m3, m4, m5)
+```
+
+```{r assumptions check}
+qqnorm(resid(m5))
+plot(m5)
+```
+
+## plotting intensity high low
+
+```{r df_long2_int plotting intensity high_low}
+df_long2_int_hbo %>% 
+    group_by(
+  ROI, trial, intensity_high_low
+  ) %>% 
+  ggplot() +
+  aes(
+    x = ROI, y = theta, color = intensity_high_low) +
+  stat_summary(
+    fun = 'mean', geom = 'point', size = 2) + 
+    stat_summary(fun.data = "mean_se", geom = 'errorbar', width = .1) +
+    stat_summary(fun = 'mean', geom = 'line', color = 'gray55', aes(group = intensity_high_low)) + 
+  coord_cartesian(ylim = c(-1, 3)) + 
+  facet_wrap(~trial)
+```
+
+## plotting intensity three-levels
+
+```{r df_long2_int relevel intensity}
+# relevel in a really bad way but it works - neu, pos, neg
+df_long2_int_hbo$intensity <- relevel(df_long2_int_hbo$intensity, 'neu')
+df_long2_int_hbo$intensity <- relevel(df_long2_int_hbo$intensity, 'pos')
+df_long2_int_hbo$intensity <- relevel(df_long2_int_hbo$intensity, 'neu')
+```
+
+
+```{r df_long2_int plotting intensity 3 levels}
+df_long2_int_hbo %>% 
+  filter(
+    ROI != 'front'
+  ) %>% 
+    group_by(
+  ROI, trial, intensity
+  ) %>% 
+  ggplot() +
+  aes(
+    x = ROI, y = theta, color = intensity) +
+  stat_summary(
+    fun = 'mean', geom = 'point', size = 2) + 
+    stat_summary(fun.data = "mean_se", geom = 'errorbar', width = .1) +
+    stat_summary(fun = 'mean', geom = 'line', color = 'gray55', aes(group = intensity)) + 
+  coord_cartesian(ylim = c(-1, 3)) + 
+  scale_color_manual(values = c('#0000FF', '#00FF00','#FF0000')) +
+  scale_x_discrete(name = 'ROI',labels = c('auditory cortices','visual cortex')) +
+  labs(
+    title = 'Theta across valence of stimuli in both auditory and visual trials for each ROI'
+  ) + 
+  scale_color_discrete(name = "valence", labels = c("neutral", "positive", "negative")) +
+  facet_wrap(~trial, 
+             labeller = 
+               labeller(trial = 
+                          c("aud_stim" = "Auditory stimuli",
+                            "vis_stim" = "Visual stimuli"
+                          )))
+
+```
+```{r}
+df_long2_int_hbo %>% 
+    group_by(
+  ROI, trial, intensity
+  ) %>% 
+  ggplot() +
+  aes(
+    x = intensity, y = theta, color = intensity) +
+  stat_summary(
+    fun = 'mean', geom = 'point', size = 2) + 
+    stat_summary(fun.data = "mean_se", geom = 'errorbar', width = .1) +
+    stat_summary(fun = 'mean', geom = 'line', color = 'gray55', aes(group = intensity)) + 
+    stat_summary(fun = 'mean', geom = 'line', color = 'gray55', aes(group = 1)) + 
+  coord_cartesian(ylim = c(0, 2.5)) + 
+  scale_color_manual(values = c('#0000FF', '#00FF00','#FF0000')) +
+  theme(legend.position = 'none') +
+  scale_x_discrete(name = 'Valence',labels = c('neutral','positive', 'negative')) +
+  labs(
+    title = 'Signal across valence of stimuli'
+  )
 
 ```
 
