@@ -13,28 +13,10 @@ knitr::opts_chunk$set(echo = TRUE)
 pacman::p_load(tidyverse, lme4, sjmisc, lmerTest)
 ```
 
+- Shortcuts
 shift + control + option + M = ændr samme value flere steder i samme chunk
-# Testing - ignore
-```{r testing}
-conditions = c('Auditory/pos', ...)
-for i in range(subjects){
-  d1 = data_frame()
-  for j in range(conditions){
-    d2 <- read_csv("data_frames/df_epochs_aud_neg0-kopi.csv")
-    
-    
-  }
-  d1 = rbind(d1,d2)
-  d1$ID = i
-}
 
-?rbind
-
-summary(d2)
-```
-
-
-```{r testing}
+```{r testing function + for loop}
 
 file_name = 'df_epochs_aud_neg0.csv'
 data <- read_csv(paste0("data_frames/",file_name))
@@ -484,8 +466,9 @@ df_long_baseline_hbr <- df_long_baseline %>%
   filter(chroma == 'hbr')
 ```
 
-# Building model
-# Real data
+# H1
+## H1 real data model
+
 ```{r models}
 # null model
 m0 <- lmer(theta ~ 1 + (1|subject) + (1|cha_name), df_long_hbo, REML = F)
@@ -498,16 +481,32 @@ m2 <- lmer(theta ~ ROI + trial + (1|subject) + (1|cha_name), df_long_hbo, REML =
 #summary(m2)
 
 m3 <- lmer(theta ~ ROI*trial + (1|subject) + (1|cha_name), df_long_hbo, REML = F)
-summary(m3)
+#summary(m3)
 
 anova(m0, m1, m2, m3)
 
-# real model
-m1 <- lmer(theta ~ 1 + trial:ROI:chroma + (1|subject), df_long_hbo, REML = F)
-summary(m1)
 ```
+### H1 Hbo models real data
+REML = F: Model 1 og model 3 er significant. Dvs. main effect af ROI og interaction af ROI og trial type.
+REML = T: M1 og m3 er significant, dvs. main effect af ROI og interaction effect af ROI og trial. 
+
+Kører med REML = F. 
+
+### H1 Hbr models real data 
+REML = F: Model 2 and model 3 is significant at p< .05. Dvs. main affect af ROI og trial+ interaction effect af ROI og trial. 
+
+## Assumptions check 
+
+```{r assumptions check}
+# checking assumptions with diagnostic plots
+qqnorm(resid(m3))
+plot(m3)
+```
+Hbo: Looks good 
+Hbr: Looks worse, but still relatively okay....
+
 ## Post-hoc analysis
-```{r post hoc}
+```{r emmeans}
 # emm_options(lmerTest.limit = 10854)
 # emm_options(disable.pbkrtest = TRUE)
 emm_roi <- emmeans(m3, pairwise ~ ROI)
@@ -525,6 +524,7 @@ IC_trial.roi <- contrast(emm_trial.roi[[1]], method = "pairwise")
 # rbind(IC_r.d[1:4], adjust = "mvt")
 # rbind(IC_r.d[1:4], adjust = "none")
 rbind(IC_roi.trial)
+
 rbind(IC_trial.roi)
 
 # IC_r.d[1:4]
@@ -535,8 +535,25 @@ IC_IC_trial.roi <- contrast(emm_trial.roi[[1]], interaction = c("pairwise", "con
 rbind(IC_IC_trial.roi)
 confint(rbind(IC_IC_trial.roi))
 ```
+### H1 Hbo EMM real data
+Significant estimated marginal means:
 
-```{r plot test}
+ trial    contrast  estimate    SE  df z.ratio p.value
+ aud_stim aud - vis     1.08 0.284 Inf   3.809  0.0003
+
+Dvs. i auditory trials er der significant forskel i auditory og visual cortex på p<.001
+
+-  vis aud_stim - vis_stim   -0.497 0.204 Inf  -2.441  0.0293
+I visual cortex er der significant forskel af auditory og visual trials på p <.05.
+
+
+### H1 Hbr EMM real data
+Significant estimated marginal means:
+-  vis aud_stim - vis_stim -0.19900 0.0633 Inf  -3.142  0.0034
+I visual cortex er der signifikant forskel i aktiviteten udløst af visual og auditory trials på p <.01.
+
+## H1 Plots Hbo + Hbr real data
+```{r plot test - not good}
 # trying to plot df_long_hbo
 
 df_long_hbo %>% mutate(
@@ -568,9 +585,8 @@ df_long_hbo %>% mutate(
     fun = 'mean', geom = 'point', size = 2)
 ```
 
-
-```{r best plot}
-#new try
+```{r best plots}
+# hbo
 df_long_hbo %>% 
     group_by(
   ROI, trial
@@ -582,20 +598,114 @@ df_long_hbo %>%
     fun = 'mean', geom = 'point', size = 2) + 
     stat_summary(fun.data = "mean_se", geom = 'errorbar', width = .1) +
     stat_summary(fun = 'mean', geom = 'line', color = 'gray55', aes(group = trial)) + 
-  coord_cartesian(ylim = c(-.2, 2))
+  coord_cartesian(ylim = c(0, 2)) + 
+  scale_x_discrete(
+    name = '', labels = c('auditory cortices', 'visual cortex')
+  ) +
+  labs(
+    title = 'Hbo signal across ROIs and type of trial',
+    y = 'theta (AU)') + 
+  scale_color_discrete(
+    name = '',
+    labels = c(
+      'Auditory stimuli', 'Visual stimuli'
+    )
+  )
+  
+  
+# hbr
+df_long_hbr %>% 
+    group_by(
+  ROI, trial
+  ) %>% 
+  ggplot() +
+  aes(
+    x = ROI, y = theta, color = trial) +
+  stat_summary(
+    fun = 'mean', geom = 'point', size = 2) + 
+    stat_summary(fun.data = "mean_se", geom = 'errorbar', width = .1) +
+    stat_summary(fun = 'mean', geom = 'line', color = 'gray55', aes(group = trial)) + 
+  coord_cartesian(ylim = c(0, 2)) + 
+  scale_x_discrete(
+    name = '', labels = c('auditory cortices', 'visual cortex')
+  ) +
+  labs(
+    title = 'Hbr signal across ROIs and type of trial',
+    y = 'theta (AU)') + 
+  scale_color_discrete(
+    name = '',
+    labels = c(
+      'Auditory stimuli', 'Visual stimuli'
+    )
+  )
 ```
+## H1 baseline model
 
-```{r means}
-test <- df_long_hbr %>% filter(ROI == 'aud', trial == 'aud_stim')
-test2 <- df_long_hbr %>% filter(ROI == 'aud', trial == 'vis_stim')
+```{r models}
+# null model
+m0 <- lmer(theta ~ 1 + (1|subject) + (1|cha_name), df_long_baseline_hbr, REML = F)
+#summary(m0)
 
-mean(test$theta)
-mean(test2$theta)
+m1 <- lmer(theta ~ ROI + (1|subject) + (1|cha_name), df_long_baseline_hbr, REML = F)
+#summary(m1)
+
+m2 <- lmer(theta ~ ROI + trial + (1|subject) + (1|cha_name), df_long_baseline_hbr, REML = F)
+#summary(m2)
+
+m3 <- lmer(theta ~ ROI*trial + (1|subject) + (1|cha_name), df_long_baseline_hbr, REML = F)
+#summary(m3)
+
+anova(m0, m1, m2, m3)
+
 ```
+### Baseline hbo model
+REML = F: m1 og m2 er significant. Men heldigvis ikke nogen interaction effect. 
 
+### Baseline hbr model
+REML = F: m3 er significant på p<.05....... dvs. interaction effect. pis. 
+
+## H1 baseline assumptions
+```{r assumptions check}
+# checking assumptions with diagnostic plots
+qqnorm(resid(m3))
+plot(m3)
+```
+Hbr: Ser ikke super ud. men kunne være værre...
+
+## H1 baseline posthoc
+
+```{r emmeans}
+# emm_options(lmerTest.limit = 10854)
+# emm_options(disable.pbkrtest = TRUE)
+emm_roi <- emmeans(m3, pairwise ~ ROI)
+emm_roi_c <- emm_roi[[2]]
+emm_trial <- emmeans(m3, pairwise ~ trial)
+emm_trial_c <- emm_trial[[2]]
+
+#Time by deviant interaction
+emm_roi.trial <- emmeans(m3, pairwise ~ ROI | trial)
+IC_roi.trial <- contrast(emm_roi.trial[[1]], method = "pairwise")
+emm_trial.roi <- emmeans(m3, pairwise ~ trial | ROI)
+IC_trial.roi <- contrast(emm_trial.roi[[1]], method = "pairwise")
+
+# rbind(emm_rc, emm_dc, IC_r.d[1:4], IC_d.r[1:12], adjust = "mvt")
+# rbind(IC_r.d[1:4], adjust = "mvt")
+# rbind(IC_r.d[1:4], adjust = "none")
+rbind(IC_roi.trial)
+
+rbind(IC_trial.roi)
+````
+Hbr: lille effect i auditory trials mellem auditory og visual cortex
+
+trial contrast   estimate      SE  df z.ratio p.value
+ aud   aud - vis -0.020744 0.00835 Inf  -2.484  0.0260
+
+Men hvis man kigger på plottet, ser det ikke super overbevisende ud (altså, det er en ret lille effekt).
+
+## H1 baseline plots
 
 ```{r baseline plotting}
-
+# hbr
 df_long_baseline_hbr %>% 
     group_by(
   ROI, trial
@@ -607,56 +717,11 @@ df_long_baseline_hbr %>%
     fun = 'mean', geom = 'point', size = 2) + 
     stat_summary(fun.data = "mean_se", geom = 'errorbar', width = .1) +
     stat_summary(fun = 'mean', geom = 'line', color = 'gray55', aes(group = trial))+ 
-  coord_cartesian(ylim = c(-.2, 2))
-
-
+  coord_cartesian(ylim = c(-.1, .1)) # læg mærke til skalaen
 ```
 
-
-
-```{r plot inspi from other markdown}
-df_long_2  %>% 
-  group_by(sent_type) %>% 
-  ggplot() +
-  aes(x = subsection, y = sent_score, color = sent_type) +
-  stat_summary(fun = 'mean', geom = 'point', size = 1) +
-  stat_summary(fun.data = "mean_se", geom = 'errorbar', width = .1) +
-  labs(
-    title = 'Sentiment compound score of text and headline of articles',
-    subtitle = 'Articles from New York Times (1st of January - 15th of September 2021)',
-    x = '', 
-    y = 'Compound score',
-    color = '') +
-  scale_color_manual(labels = c('Headline','Mean', 'Text'), values = c('red', 'grey40','blue')) +
-  geom_hline(
-    yintercept = -.21, 
-    alpha = .4, linetype = 'dashed'
-  ) + 
-  coord_cartesian(ylim = c(-1,1)) #+
-  #geom_text(aes(x = factor('Middle East'), y = -.10, label = 'mean'), size = 3)
-  
-```
-
-
-```{r models}
-# baseline model
-m2 <- lmer(theta ~ 1 + trial:ROI:chroma + (1|subject), df_long_baseline, REML = F)
-
-summary(m1)
-summary(m2)
-```
-
-```{r checking assumptions}
-# checking assumptions with diagnostic plots
-qqnorm(resid(m3))
-plot(m3)
-
-qqnorm(resid(m3))
-plot(m3)
-```
-
-# Pos vis/aud versus neg vis/aud - whole brain
-
+# H2
+## Create dataframe
 ```{r create df_long2}
 # FOR H3 
 df_long2_start <- df_long # (must be done after pivot_longer)
@@ -921,17 +986,23 @@ m2 <- lmer(theta ~ intensity + ROI + (1|subject) + (1|cha_name), df_long2_int_hb
 
 m3 <- lmer(theta ~ intensity + ROI + trial + (1|subject) + (1|cha_name), df_long2_int_hbo, REML = F)
 
-m4 <- lmer(theta ~ intensity*ROI + (1|subject) + (1|cha_name), df_long2_int_hbo, REML = F)
+m4 <- lmer(theta ~ trial + intensity*ROI + (1|subject) + (1|cha_name), df_long2_int_hbo, REML = F)
 
-m5 <- lmer(theta ~ intensity*trial*ROI + (1|subject) + (1|cha_name), df_long2_int_hbo, REML = F)
+m5 <- lmer(theta ~ trial*intensity + ROI*intensity + (1|subject) + (1|cha_name), df_long2_int_hbo, REML = F)
 
-anova(m0, m1, m2, m3, m4, m5)
+m6 <- lmer(theta ~ trial*intensity + intensity*ROI + trial*ROI + (1|subject) + (1|cha_name), df_long2_int_hbo, REML = F)
+
+m7 <- lmer(theta ~ intensity*trial*ROI + (1|subject) + (1|cha_name), df_long2_int_hbo, REML = F)
+
+anova(m0, m1, m2, m3, m4, m5, m6, m7)
 ```
 
 ```{r assumptions check}
 qqnorm(resid(m5))
 plot(m5)
 ```
+
+
 
 ## plotting intensity high low
 
@@ -965,6 +1036,7 @@ df_long2_int_hbo$intensity <- relevel(df_long2_int_hbo$intensity, 'neu')
 df_long2_int_hbo %>% 
   filter(
     ROI != 'front'
+  #  ,intensity != 'neu'
   ) %>% 
     group_by(
   ROI, trial, intensity
@@ -977,12 +1049,11 @@ df_long2_int_hbo %>%
     stat_summary(fun.data = "mean_se", geom = 'errorbar', width = .1) +
     stat_summary(fun = 'mean', geom = 'line', color = 'gray55', aes(group = intensity)) + 
   coord_cartesian(ylim = c(-1, 3)) + 
-  scale_color_manual(values = c('#0000FF', '#00FF00','#FF0000')) +
+  scale_color_manual(name = "valence", labels = c("neutral", "positive", "negative"), values = c('black', 'blue', 'red')) +
   scale_x_discrete(name = 'ROI',labels = c('auditory cortices','visual cortex')) +
   labs(
     title = 'Theta across valence of stimuli in both auditory and visual trials for each ROI'
   ) + 
-  scale_color_discrete(name = "valence", labels = c("neutral", "positive", "negative")) +
   facet_wrap(~trial, 
              labeller = 
                labeller(trial = 
