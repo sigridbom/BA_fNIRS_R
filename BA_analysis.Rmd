@@ -357,6 +357,10 @@ df_long_hbr <- df_long %>%
 ```
 
 
+```{r write to csv}
+write_csv(df_long, 'df_hyp1.csv')
+```
+
 ## BASELINE rearrange
 ```{r df_long_baseline}
 
@@ -832,6 +836,10 @@ df_long2_hbr <- df_long2 %>%
 
 ```
 
+```{r write to csv}
+write_csv(df_long2, 'df_hyp2.csv')
+```
+
 
 ## model intensity real data
 
@@ -1063,7 +1071,7 @@ df_long2_hbo %>%
 ### trial*ROI interaction
 ```{r plot}
 # trial by ROI
-df_long2_hbo %>% 
+df_long2_hbr %>% 
     group_by(
   ROI, trial, intensity
   ) %>% 
