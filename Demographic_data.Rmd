@@ -1,0 +1,115 @@
+---
+title: "Demographic_data"
+author: "Sigrid Agersnap Bom Nielsen"
+date: "17/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages}
+pacman::p_load(tidyverse)
+```
+
+```{r read csv}
+d <- read_csv("Demography-DK.csv")
+```
+
+```{r}
+glimpse(d)
+```
+
+```{r rename columns}
+d <- d %>% 
+  rename(
+    subject = 'Deltager ID',
+    gender = 'Køn',
+    age = 'Alder (minimum 18 år)',
+    danish_speaking =  'Taler du flydende dansk?',
+    danish_raised = 'Er du født og opvokset i Danmark?',
+    danish_parents = 'Er dine forælde født og opvokset i Danmark?',
+   color_blind = 'Er du farveblind?',
+   hearing_imp = 'Er du høreskadet?'
+  )
+```
+
+Kun de participants, der ikke er ekskluderet fra analysen. 
+
+```{r manipulate df}
+# select relevant participants
+
+d <- d %>% 
+  filter(
+      subject == '112' |
+      subject == '118' | 
+      subject == '122' |
+      subject == '123' |  
+      subject == '124' |
+      subject == '125' |
+      subject == '129' |
+      subject == '200' |
+      subject == '201' |
+      subject == '203' |
+      subject == '204' |
+      subject == '206' | # synder
+      subject == '300' |
+      subject == '302' | 
+      subject == '303' |
+      subject == '304' |
+      subject == '306' |
+      subject == '400' |
+      subject == '402'
+  )
+      
+ # mangler info om participant 206     
+```
+
+```{r gender}
+d %>% filter(
+  gender == 'Kvinde'
+) %>% 
+  count()
+# 8 women
+
+d %>% filter(
+  gender == 'Mand'
+) %>% 
+  count()
+
+# 10 men
+```
+```{r age}
+# mean age 
+mean(d$age)
+min(d$age)
+max(d$age)
+sd(d$age)
+```
+```{r stats}
+# colorblind
+d %>% filter(
+  color_blind == 'Nej'
+) %>% count() # 17 - two NA
+
+# hearing imp
+d %>% filter(
+  hearing_imp == 'Nej'
+) %>% count() # 18 out of 18
+
+# Danish speaking
+d %>% filter(
+  danish_speaking == 'Ja'
+) %>% count() # 18 out of 18
+
+# Danish parents
+d %>% filter(
+  danish_parents == 'Ja'
+) %>% count() # 16
+
+d %>% filter(
+  danish_parents == 'Nej'
+) %>% count() # 2
+```
+
