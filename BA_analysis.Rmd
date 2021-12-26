@@ -490,6 +490,9 @@ m3 <- lmer(theta ~ ROI*trial + (1|subject) + (1|cha_name), df_long_hbo, REML = F
 anova(m0, m1, m2, m3)
 
 summary(m3)
+
+pacman::p_load(sjPlot)
+tab_model(m3)
 ```
 
 
@@ -594,9 +597,9 @@ p1 <- df_long_hbo %>%
     name = '', labels = c('auditory cortices', 'visual cortex')
   ) +
   labs(
-    title = 'Signal across ROIs and type of trial', 
-    subtitle = 'Oxygenated hemoglobin (Hbo)',
-    y = 'theta (AU)') + 
+    title = 'Change in signal across ROIs, trial type and chroma', 
+    subtitle = 'Oxygenated hemoglobin (HbO)',
+    y = expression('theta' ~ (Delta*mu*Mu))) + 
   scale_color_discrete(
     name = '',
     labels = c(
@@ -622,8 +625,8 @@ p2 <- df_long_hbr %>%
     name = '', labels = c('auditory cortices', 'visual cortex')
   ) +
   labs(
-    subtitle = 'Deoxygenated hemoglobin (Hbr)', # signal across ROIs and type of trial',
-    y = '') + #theta (AU)') + 
+    subtitle = 'Deoxygenated hemoglobin (HbR)', # signal across ROIs and type of trial',
+    y = '') + #theta ()') + 
   scale_color_discrete(
     name = '',
     labels = c(
@@ -632,14 +635,42 @@ p2 <- df_long_hbr %>%
   ) + 
   theme(legend.position = 'none')
 
-p1 + p2
+(p1 + p2)
 ```
-```{r individual traces plots}
+```{r}
+df_long_hbo %>% 
+    group_by(
+  ROI, trial
+  ) %>% 
+  ggplot() +
+  aes(
+    x = trial, y = theta, color = ROI) +
+  stat_summary(
+    fun = 'mean', geom = 'point', size = 2) + 
+    stat_summary(fun.data = "mean_se", geom = 'errorbar', width = .1) +
+    stat_summary(fun = 'mean', geom = 'line', color = 'gray55', aes(group = ROI)) + 
+  coord_cartesian(ylim = c(0, 2)) + 
+  scale_x_discrete(
+    name = '', labels = c('auditory stimuli', 'visual stimuli')
+  ) +
+  labs(
+    title = 'Change in signal across ROIs, trial type and chroma', 
+    subtitle = 'Oxygenated hemoglobin (HbO)',
+    y = expression('theta' ~ (Delta*mu*Mu))) + 
+  scale_color_discrete(
+    name = '',
+    labels = c(
+      'Auditory cortices', 'Visual cortex'
+    )
+  ) 
+```
+
+```{r individual traces plots, fig.width=5}
 # testing sub rep plot
 
 # ROI på x-aksen
 # AUDITORY TRIALS
-df_long_hbo %>% 
+p5 <- df_long_hbo %>% 
   filter(
     trial == 'aud_stim'
   ) %>% 
@@ -660,8 +691,9 @@ df_long_hbo %>%
   ) +
   labs(
     title = 'Signal across ROIs and auditory trials', 
-    subtitle = 'Oxygenated hemoglobin (Hbo)',
-    y = 'theta (AU)') + 
+    subtitle = 'Oxygenated hemoglobin (HbO)',
+    y = expression('theta' ~ (Delta*mu*Mu))
+    ) + 
   scale_color_discrete(
     name = '',
     labels = c(
@@ -676,7 +708,7 @@ df_long_hbo %>%
                           )))
   
   # VISUAL TRIALS
-  df_long_hbo %>% 
+  p6 <- df_long_hbo %>% 
   filter(
     trial == 'vis_stim'
   ) %>% 
@@ -697,8 +729,9 @@ df_long_hbo %>%
   ) +
   labs(
     title = 'Signal across ROIs and visual trials', 
-    subtitle = 'Oxygenated hemoglobin (Hbo)',
-    y = 'theta (AU)')  +
+    subtitle = 'Oxygenated hemoglobin (HbO)',
+   y = expression('theta' ~ (Delta*mu*Mu))
+    )  +
      theme(legend.position = 'none')
   #+ 
   scale_color_discrete(
@@ -706,10 +739,14 @@ df_long_hbo %>%
     labels = c(
       'Auditory stimuli', 'Visual stimuli'
     ))
- 
   
-  
-  # STIM på x-aksen
+  p5 + p6
+```
+
+
+
+```{r individual traces plots}
+# STIM på x-aksen
   
   # auditory cortices
   df_long_hbo %>% 
@@ -763,7 +800,7 @@ df_long_hbo %>%
 ```
 
 
-```{r individual traces plots - both}
+```{r individual traces plots - both- doesn't work}
 
 df_long_hbo  %>% 
     group_by(
@@ -1051,27 +1088,39 @@ write_csv(df_long2, 'df_hyp2.csv')
 
 
 ## model intensity real data
+```{r relevel}
+# relevel in a really bad way but it works - neu, pos, neg
+df_long2_hbo$intensity <- relevel(df_long2_hbo$intensity, 'neu')
+df_long2_hbo$intensity <- relevel(df_long2_hbo$intensity, 'pos')
+df_long2_hbo$intensity <- relevel(df_long2_hbo$intensity, 'neu')
+
+# relevel in a really bad way but it works - neu, pos, neg
+df_long2_hbr$intensity <- relevel(df_long2_hbr$intensity, 'neu')
+df_long2_hbr$intensity <- relevel(df_long2_hbr$intensity, 'pos')
+df_long2_hbr$intensity <- relevel(df_long2_hbr$intensity, 'neu')
+```
+
 
 ```{r df_long2_int modelling}
 # null model
-m0 <- lmer(theta ~ 1 + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+m0 <- lmer(theta ~ 1 + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
 #summary(m0)
 
-m1 <- lmer(theta ~ intensity + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+m1 <- lmer(theta ~ intensity + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
 #summary(m1)
 
-m2 <- lmer(theta ~ intensity + ROI + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+m2 <- lmer(theta ~ intensity + ROI + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
 #summary(m2)
 
-m3 <- lmer(theta ~ intensity + ROI + trial + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+m3 <- lmer(theta ~ intensity + ROI + trial + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
 
-m4 <- lmer(theta ~ trial + intensity*ROI + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+m4 <- lmer(theta ~ trial + intensity*ROI + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
 
-m5 <- lmer(theta ~ trial*intensity + ROI*intensity + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+m5 <- lmer(theta ~ trial*intensity + ROI*intensity + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
 
-m6 <- lmer(theta ~ trial*intensity + intensity*ROI + trial*ROI + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+m6 <- lmer(theta ~ trial*intensity + intensity*ROI + trial*ROI + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
 
-m7 <- lmer(theta ~ intensity*trial*ROI + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+m7 <- lmer(theta ~ intensity*trial*ROI + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
 
 anova(m0, m1, m2, m3, m4, m5, m6, m7)
 ```
@@ -1091,6 +1140,56 @@ Dvs, main effect af intensity, ROI og trial,
 2 x to-vejs interaction mellem trial og intensity, og ROI og intensity
 3 x to-vejs interactions mellem trial og intensity, intensity og ROI, og trial og ROI.
 
+# NEW MODELS
+```{r new models! H1 + H2}
+# null model
+m0 <- lmer(theta ~ 1 + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+
+m1 <- lmer(theta ~ ROI + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+
+m2 <- lmer(theta ~ ROI + trial + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+
+m3 <- lmer(theta ~ ROI + trial + intensity + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+
+# H1
+m4 <- lmer(theta ~ ROI*trial + intensity + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+
+m5 <- lmer(theta ~ ROI*trial + intensity*ROI + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+
+# H1 + H2
+m6 <- lmer(theta ~ ROI*trial + intensity*ROI + trial*intensity + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+
+m7 <- lmer(theta ~ intensity*trial*ROI + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+```
+
+
+```{r new models! H1 + H2 test}
+# null model
+m0 <- lmer(theta ~ 1 + (1|subject), test, REML = F)
+
+m1 <- lmer(theta ~ ROI + (1|subject), test, REML = F)
+
+m2 <- lmer(theta ~ ROI + trial + (1|subject), test, REML = F)
+
+m3 <- lmer(theta ~ ROI + trial + intensity + (1|subject), test, REML = F)
+
+# H1
+m4 <- lmer(theta ~ ROI*trial + intensity + (1|subject), test, REML = F)
+
+m5 <- lmer(theta ~ ROI*trial + intensity*ROI + (1|subject), test, REML = F)
+
+# H1 + H2
+m6 <- lmer(theta ~ ROI*trial + intensity*ROI + trial*intensity + (1|subject), test, REML = F)
+
+m7 <- lmer(theta ~ intensity*trial*ROI + (1|subject), test, REML = F)
+
+
+```
+
+```{r H1 + H2 anova}
+anova(m0, m1, m2, m3, m4, m5, m6, m7)
+```
+
 ```{r model summary and R-squared}
 MuMIn::r.squaredGLMM(m6)
 MuMIn::r.squaredLR(m6)
@@ -1098,6 +1197,9 @@ MuMIn::r.squaredLR(m6)
 summary(m6)
 ```
 
+```{r H1 + H2 tab_model}
+tab_model(m6)
+```
 
 ```{r assumptions check}
 qqnorm(resid(m6))
@@ -1138,10 +1240,10 @@ emm_trial.int <- emmeans(m6, pairwise ~ trial | intensity)
 IC_trial.int <- contrast(emm_trial.int[[1]], method = "pairwise")
 
 # ROI by trial interaction
-emm_roi.trial <- emmeans(m3, pairwise ~ ROI | trial)
+emm_roi.trial <- emmeans(m6, pairwise ~ ROI | trial)
 IC_roi.trial <- contrast(emm_roi.trial[[1]], method = "pairwise")
 
-emm_trial.roi <- emmeans(m3, pairwise ~ trial | ROI)
+emm_trial.roi <- emmeans(m6, pairwise ~ trial | ROI)
 IC_trial.roi <- contrast(emm_trial.roi[[1]], method = "pairwise")
 
 # rbind(emm_rc, emm_dc, IC_r.d[1:4], IC_d.r[1:12], adjust = "mvt")
@@ -1174,14 +1276,15 @@ Dvs. i trials med neutral intensity er der signifikant forskel mellem auditory o
 
 *ROI_int*
  ROI contrast  estimate    SE  df z.ratio p.value
- aud neg - neu   0.6996 0.249 Inf   2.810  0.0297
+ aud neu - neg  -0.6996 0.249 Inf  -2.810  0.0297
  aud neg - pos   0.7602 0.249 Inf   3.053  0.0136
- vis neg - neu   1.4280 0.249 Inf   5.736  <.0001
+ vis neu - neg  -1.4280 0.249 Inf  -5.736  <.0001
  vis neu - pos  -1.2502 0.249 Inf  -5.022  <.0001
+
  
-I auditory cortex er der signifikant forskel på negative og neutral stimuli, hvor negativ stimuli har størt effect med en forskel på 0.7.
+I auditory cortex er der signifikant forskel på negative og neutral stimuli, hvor negativ stimuli har størt effect med en forskel på -0.7.
 I auditory cortex er der signifkant forskel mellem negative og positive stimuli, hvor negativ har størst effect med en forskel på 0.8.
-I visual cortex er der signifikant forskel mellem negative og neutral stimuli, hvor negative stimuli har størt effekt med en forskel på 1.4.
+I visual cortex er der signifikant forskel mellem negative og neutral stimuli, hvor negative stimuli har størt effekt med en forskel på -1.4.
 I visual cortex er der signifikant forskel mellem positive og neutral stimuli, hvor positive stimuli har størst effet (forskel på -1.3. )
  
  *trial_int*
@@ -1192,23 +1295,32 @@ I neutral stimuli trials, er der signifikant forskel mellem auditory og visual t
 
  *int_trial*
   trial    contrast  estimate    SE  df z.ratio p.value
- aud_stim neg - neu    1.566 0.249 Inf   6.289  <.0001
- aud_stim neg - pos    0.760 0.249 Inf   3.053  0.0136
+ aud_stim neu - neg   -1.566 0.249 Inf  -6.289  <.0001
  aud_stim neu - pos   -0.806 0.249 Inf  -3.236  0.0073
+ aud_stim neg - pos    0.760 0.249 Inf   3.053  0.0136
+ 
  
 Ved auditory trials, er der signifikant forskel mellem både neg og neu stimuli (neg er størst), neg og pos stimuli (neg er størst) og neu og pos stimuli (pos er størst).
 
-*roi_trial*
- trial    contrast  estimate    SE  df z.ratio p.value
- aud_stim aud - vis    0.744 0.229 Inf   3.250  0.0023
- vis_stim aud - vis    0.744 0.229 Inf   3.250  0.0023
- 
- Dette er jo min H1..
- 
- Men her får jeg at der en signifikant forskel mellem auditory og visual cortex både i auditory trials og visual trials (se også plots).
+*roi_trial new*
 
-*trial_roi*
-ingen signifikante kontraster. 
+ trial    contrast  estimate   SE  df z.ratio p.value
+ aud_stim aud - vis    1.118 0.27 Inf   4.135  0.0001
+ vis_stim aud - vis    0.371 0.27 Inf   1.370  0.3411
+
+samme som i H1 - næsten magen til. Dvs. i auditory trials er der significant forskel i auditory og visual cortex på p<.001
+
+
+*trial_roi new*
+ ROI contrast            estimate    SE  df z.ratio p.value
+ aud aud_stim - vis_stim    0.251 0.203 Inf   1.233  0.4351
+ vis aud_stim - vis_stim   -0.497 0.203 Inf  -2.444  0.0290
+
+samme som i H1 (næsten magen til, det er estimater).
+
+I visual cortex er der significant forskel af auditory og visual trials på p <.05.
+(større effekt men mindre sikker ift. H1)
+
 
 ### H2 Hbr EMM real data
 Significant estimated marginal means:
@@ -1232,7 +1344,34 @@ I auditory trials er der signifikant forskel mellem negative og neutrale stimuli
  aud aud_stim - vis_stim   -0.111 0.0437 Inf  -2.535  0.0225
  vis aud_stim - vis_stim   -0.111 0.0437 Inf  -2.535  0.0225
 
-I både auditory og visual cortices er der significant forskel på visual og auditory trials. Her er det begge steder visuel stimuli der har den største effekt (forskel på -0.1.)
+I både auditory og visual cortices er der significant forskel på visual og auditory trials. Her er det begge steder visuel stimuli der har den største effekt (forskel på -0.1.) ------ gælder ikke skal køres igen, men det er ikke relevant alligevel. 
+
+
+
+```{r testing}
+test <- aggregate(df_long2_hbo$theta, list(df_long2_hbo$subject, df_long2_hbo$ROI, df_long2_hbo$trial, df_long2_hbo$intensity, df_long2_hbo$epoch), FUN=mean) 
+
+
+test <- test %>% 
+  rename(
+    subject = 'Group.1',
+    ROI = 'Group.2',
+    trial = 'Group.3',
+    intensity = 'Group.4',
+    epoch = 'Group.5',
+    theta = x
+  )
+
+
+test <- test %>% 
+  mutate(
+    subject = as.factor(subject),
+    ROI = as.factor(ROI),
+    trial = as.factor(trial),
+    intensity = as.factor(intensity)
+  )
+```
+
 
 ## plotting 
 ### intensity og ROI interaction
@@ -1254,7 +1393,30 @@ df_long2_hbo %>%
     stat_summary(fun.data = "mean_se", geom = 'errorbar', width = .1) +
     stat_summary(fun = 'mean', geom = 'line', color = 'gray55', aes(group = intensity)) + 
   coord_cartesian(ylim = c(-1, 3)) + 
-  scale_color_manual(name = "valence", labels = c("neutral", "positive", "negative"), values = c('black', 'blue', 'red')) +
+  scale_color_manual(name = "valence", labels = c("neutral", "negative", "positive"), values = c('black', 'red', 'blue')) +
+  scale_x_discrete(name = 'ROI',labels = c('auditory cortices','visual cortex')) +
+  labs(
+    title = 'Theta across intensity of stimuli in both auditory and visual cortices/cortex'
+  ) 
+
+
+df_long2_hbr %>% 
+  filter(
+    ROI != 'front'
+  #  ,intensity != 'neu'
+  ) %>% 
+    group_by(
+  ROI, trial, intensity
+  ) %>% 
+  ggplot() +
+  aes(
+    x = ROI, y = theta, color = intensity) +
+  stat_summary(
+    fun = 'mean', geom = 'point', size = 2) + 
+    stat_summary(fun.data = "mean_se", geom = 'errorbar', width = .1) +
+    stat_summary(fun = 'mean', geom = 'line', color = 'gray55', aes(group = intensity)) + 
+  coord_cartesian(ylim = c(-1, 3)) + 
+  scale_color_manual(name = "valence", labels = c("neutral", "negative", "positive"), values = c('black', 'red', 'blue')) +
   scale_x_discrete(name = 'ROI',labels = c('auditory cortices','visual cortex')) +
   labs(
     title = 'Theta across intensity of stimuli in both auditory and visual cortices/cortex'
@@ -1263,9 +1425,8 @@ df_long2_hbo %>%
 
 ### intensity*trial interaction 
 
-```{r plot}
-
-df_long2_hbo %>% 
+```{r plot, fig.width = 5}
+p7 <- df_long2_hbo %>% 
     group_by(
   ROI, trial, intensity
   ) %>% 
@@ -1276,13 +1437,43 @@ df_long2_hbo %>%
     fun = 'mean', geom = 'point', size = 2) + 
     stat_summary(fun.data = "mean_se", geom = 'errorbar', width = .1) +
     stat_summary(fun = 'mean', geom = 'line', color = 'gray55', aes(group = intensity)) + 
-  coord_cartesian(ylim = c(-1, 3)) + 
-  scale_color_manual(name = "valence", labels = c("neutral", "positive", "negative"), values = c('black', 'blue', 'red')) +
-  scale_x_discrete(name = 'trial type',labels = c('auditory trials','visual trials')) +
+  coord_cartesian(ylim = c(-.5, 2.5)) + 
+  scale_color_manual(name = "valence", labels = c("neutral", "negative", "postive"), values = c('black', 'red', 'blue')) +
+  scale_x_discrete(name = '',labels = c('auditory trials','visual trials')) +
   labs(
-    title = 'Theta across intensity of stimuli in both auditory and visual trials'
-  ) 
+    title = 'Theta across valence and trial type',
+    subtitle = 'Oxyhemoglobin (HbO)',
+    y = expression('theta' ~ (Delta*mu*Mu))
+  ) + theme(legend.position = 'none',
+            text = element_text(size = 12),
+            axis.text.x = element_text(size = 12),
+            axis.text.y = element_text(size = 12)
+            )
 
+p8 <- df_long2_hbr %>% 
+    group_by(
+  ROI, trial, intensity
+  ) %>% 
+  ggplot() +
+  aes(
+    x = trial, y = theta, color = intensity) +
+  stat_summary(
+    fun = 'mean', geom = 'point', size = 2) + 
+    stat_summary(fun.data = "mean_se", geom = 'errorbar', width = .1) +
+    stat_summary(fun = 'mean', geom = 'line', color = 'gray55', aes(group = intensity)) + 
+  coord_cartesian(ylim = c(-.5, 2.5)) + 
+  scale_color_manual(name = "valence", labels = c("neutral","postive", "negative"), values = c('black', 'blue', 'red')) +
+  scale_x_discrete(name = '',labels = c('auditory trials','visual trials')) +
+  labs(
+    #title = 'Theta across valence of stimuli in both auditory and visual trials',
+    subtitle = 'Deoxyhemoglobin (HbR)',
+    y = ''
+  ) + theme(text = element_text(size = 12),
+            axis.text.x = element_text(size = 12),
+            axis.text.y = element_text(size = 12)
+            )
+
+p7+p8
 ```
 
 ### trial*ROI interaction
@@ -1341,8 +1532,8 @@ df_long2_hbo$intensity <- relevel(df_long2_hbo$intensity, 'pos')
 df_long2_hbo$intensity <- relevel(df_long2_hbo$intensity, 'neu')
 ```
 
-```{r df_long2_int plotting intensity 3 levels}
-df_long2_hbo %>% 
+```{r df_long2_int plotting intensity 3 levels, fig.width= 5, fig.height=5}
+p3 <- df_long2_hbo %>% 
   filter(
     ROI != 'front'
   #  ,intensity != 'neu'
@@ -1361,18 +1552,22 @@ df_long2_hbo %>%
   scale_color_manual(name = "Intensity", labels = c("neutral", "positive", "negative"), values = c('black', 'blue', 'red')) +
   scale_x_discrete(name = 'ROI',labels = c('auditory cortices','visual cortex')) +
   labs(
-    title = 'Theta across valence of stimuli in both auditory and visual trials for each ROI'
+    title = 'Signal across trial type, ROI, chroma and level of arousal',
+    subtitle = 'Oxygenated hemoglobin (HbO)',
+    y = expression('theta' ~ (Delta*mu*Mu)),
+    x = ''
   ) + 
   facet_wrap(~trial, 
              labeller = 
                labeller(trial = 
                           c("aud_stim" = "Auditory trials",
                             "vis_stim" = "Visual trials"
-                          )))
+                          ))) +
+  theme(legend.position = 'none')
 
 
 
-df_long2_hbr %>% 
+p4 <- df_long2_hbr %>% 
   filter(
     ROI != 'front'
   #  ,intensity != 'neu'
@@ -1387,19 +1582,31 @@ df_long2_hbr %>%
     fun = 'mean', geom = 'point', size = 2) + 
     stat_summary(fun.data = "mean_se", geom = 'errorbar', width = .1) +
     stat_summary(fun = 'mean', geom = 'line', color = 'gray55', aes(group = intensity)) + 
-  coord_cartesian(ylim = c(-.5, 1)) + 
-  scale_color_manual(name = "Intensity", labels = c("neutral", "positive", "negative"), values = c('black', 'blue', 'red')) +
+  coord_cartesian(ylim = c(-1, 3)) + 
+  scale_color_manual(name = "Arousal", labels = c("neutral", "positive", "negative"), values = c('black', 'blue', 'red')) +
   scale_x_discrete(name = 'ROI',labels = c('auditory cortices','visual cortex')) +
   labs(
-    title = 'Theta across valence of stimuli in both auditory and visual trials for each ROI'
+  #  title = 'Theta across valence of stimuli in both auditory and visual trials for each ROI'
+    subtitle = 'Deoxygenated hemoglobin (HbR)',
+    y = expression('theta' ~ (Delta*mu*Mu)),
+    x = ''
   ) + 
   facet_wrap(~trial, 
              labeller = 
                labeller(trial = 
                           c("aud_stim" = "Auditory trials",
                             "vis_stim" = "Visual trials"
-                          )))
+                          ))) +
+  theme(legend.position = 'bottom')
+
+
+p3 / p4
 ```
+
+
+
+
+
 ### Patchwork
 ```{r H2 hbo + hbr patchwork, fig.width = 4, fig.height= 4}
 p3 <- df_long2_hbo %>% 
