@@ -532,15 +532,15 @@ Hbr: Looks worse, but still relatively okay....
 ```{r emmeans}
 # emm_options(lmerTest.limit = 10854)
 # emm_options(disable.pbkrtest = TRUE)
-emm_roi <- emmeans(m3, pairwise ~ ROI)
+emm_roi <- emmeans(m4, pairwise ~ ROI)
 emm_roi_c <- emm_roi[[2]]
-emm_trial <- emmeans(m3, pairwise ~ trial)
+emm_trial <- emmeans(m4, pairwise ~ trial)
 emm_trial_c <- emm_trial[[2]]
 
 #Time by deviant interaction
-emm_roi.trial <- emmeans(m3, pairwise ~ ROI | trial)
+emm_roi.trial <- emmeans(m4, pairwise ~ ROI | trial)
 IC_roi.trial <- contrast(emm_roi.trial[[1]], method = "pairwise")
-emm_trial.roi <- emmeans(m3, pairwise ~ trial | ROI)
+emm_trial.roi <- emmeans(m4, pairwise ~ trial | ROI)
 IC_trial.roi <- contrast(emm_trial.roi[[1]], method = "pairwise")
 
 # rbind(emm_rc, emm_dc, IC_r.d[1:4], IC_d.r[1:12], adjust = "mvt")
@@ -557,6 +557,7 @@ confint(rbind(IC_roi.trial))
 IC_IC_trial.roi <- contrast(emm_trial.roi[[1]], interaction = c("pairwise", "consec"), by = NULL)
 rbind(IC_IC_trial.roi)
 confint(rbind(IC_IC_trial.roi))
+
 ```
 ### H1 Hbo EMM real data
 Significant estimated marginal means:
@@ -577,9 +578,7 @@ I visual cortex er der signifikant forskel i aktiviteten udløst af visual og au
 
 ## H1 Plots Hbo + Hbr real data
 
-```{r best plots, fig.width=5}
-pacman::p_load(patchwork)
-
+```{r best plots, fig.width=5, fig.height= 2.5}
 # hbo
 p1 <- df_long_hbo %>% 
     group_by(
@@ -597,7 +596,7 @@ p1 <- df_long_hbo %>%
     name = '', labels = c('auditory cortices', 'visual cortex')
   ) +
   labs(
-    title = 'Change in signal across ROIs, trial type and chroma', 
+    title = 'A) Signal across ROI and trial type', 
     subtitle = 'Oxygenated hemoglobin (HbO)',
     y = expression('theta' ~ (Delta*mu*Mu))) + 
   scale_color_discrete(
@@ -605,7 +604,12 @@ p1 <- df_long_hbo %>%
     labels = c(
       'Auditory stimuli', 'Visual stimuli'
     )
-  ) + theme(legend.position = 'bottom')
+  ) + theme(legend.position = 'none',
+            text = element_text(size = 12),
+            axis.text.x = element_text(size = 12),
+            axis.text.y = element_text(size = 12),
+            legend.text = element_text(size= 12)
+            )
   
   
 # hbr
@@ -632,8 +636,11 @@ p2 <- df_long_hbr %>%
     labels = c(
       'Auditory stimuli', 'Visual stimuli'
     )
-  ) + 
-  theme(legend.position = 'none')
+  )  +theme(text = element_text(size = 12),
+            axis.text.x = element_text(size = 12),
+            axis.text.y = element_text(size = 12),
+            legend.text = element_text(size= 12)
+            )
 
 (p1 + p2)
 ```
@@ -665,7 +672,7 @@ df_long_hbo %>%
   ) 
 ```
 
-```{r individual traces plots, fig.width=5}
+```{r individual traces plots, fig.width=5, fig.height = 4}
 # testing sub rep plot
 
 # ROI på x-aksen
@@ -745,13 +752,13 @@ p5 <- df_long_hbo %>%
 
 
 
-```{r individual traces plots}
+```{r individual traces plots, fig.width = 4}
 # STIM på x-aksen
   
   # auditory cortices
-  df_long_hbo %>% 
+ p11 <- df_long_hbo %>% 
   filter(
-    ROI == 'aud'
+    ROI == 'vis'
   ) %>% 
     group_by(
   ROI, trial, subject
@@ -768,15 +775,16 @@ p5 <- df_long_hbo %>%
   #  name = '', labels = c('auditory cortices', 'visual cortex')
   #) +
   labs(
-    title = 'Signal across trial type in auditory cortices.. ', 
-    subtitle = 'Oxygenated hemoglobin (Hbo)',
-    y = 'theta (AU)') + 
+    title = 'Mean signal per subject across trial type', 
+    subtitle = 'Visual cortex (Hbo)',
+     y = expression('theta' ~ (Delta*mu*Mu))
+  ) +
     theme(legend.position = 'none')
   
   # VISUAL TRIALS
-   df_long_hbo %>% 
+  p12 <-  df_long_hbo %>% 
   filter(
-    ROI == 'vis'
+    ROI == 'aud'
   ) %>% 
     group_by(
   ROI, trial, subject
@@ -784,7 +792,7 @@ p5 <- df_long_hbo %>%
   ggplot() +
   aes(
     x = trial, y = theta, color = ROI, group = subject) +
-  stat_summary(fun = 'mean', geom = 'point',color = 'turquoise', size = 2) + 
+  stat_summary(fun = 'mean', geom = 'point',color = 'gray55', size = 2) + 
     #stat_summary(fun.data = "mean_se", geom = 'errorbar', width = .1) +
     stat_summary(fun = 'mean', geom = 'line', color = 'turquoise', aes(group = subject)) + 
     stat_summary(fun = 'mean', geom = 'line', color = 'black', size = 1, aes(group = ROI)) + 
@@ -793,69 +801,13 @@ p5 <- df_long_hbo %>%
   #  name = '', labels = c('auditory cortices', 'visual cortex')
   #) +
   labs(
-    title = 'Signal across trial type in visual cortex', 
-    subtitle = 'Oxygenated hemoglobin (Hbo)',
-    y = 'theta (AU)') + 
+   # title = 'Signal across trial type in visual cortex', 
+    subtitle = 'Auditory cortices (Hbo)',
+    y = expression('theta' ~ (Delta*mu*Mu))
+  )+
     theme(legend.position = 'none')
-```
-
-
-```{r individual traces plots - both- doesn't work}
-
-df_long_hbo  %>% 
-    group_by(
-  ROI, trial, subject
-  ) %>% 
-  ggplot() +
-  aes(
-    x = ROI, y = theta, color = trial, group = subject) +
-  # visual trials
-  stat_summary(fun = 'mean', geom = 'point',color = 'turquoise', size = 2) + 
-    #stat_summary(fun.data = "mean_se", geom = 'errorbar', width = .1) +
-    stat_summary(fun = 'mean', geom = 'line', color = 'turquoise', aes(group = subject)) + 
-    stat_summary(fun = 'mean', geom = 'line', color = 'black', size = 1, aes(group = trial)) + 
-  #coord_cartesian(ylim = c(0, 2)) + 
-  #scale_x_discrete(
-  #  name = '', labels = c('auditory cortices', 'visual cortex')
-  #) +
-  labs(
-    title = 'Signal across trial type in visual cortex', 
-    subtitle = 'Oxygenated hemoglobin (Hbo)',
-    y = 'theta (AU)') + 
-    theme(legend.position = 'none')
-
-
-```
-
-
-```{r testing plot}
-
-d_Rv_Tv <- df_long_hbo %>% 
-  filter(
-    ROI == 'vis',
-    trial == 'vis_stim'
-  )
-
-d_sub_h1 <- df_long_hbo %>% 
-  group_by(
-    ROI,
-    trial
-  ) %>% 
-  colMeans()
-
-pacman::p_load(ggrepel)
-
-df_long_hbo %>%
-    ggplot(aes(
-      x = ROI,
-      y = theta,
-      color = trial,
-      group = subject, label = subject
-    )) +
-    geom_line() +
-   # ggrepel::geom_label_repel(size = 3, alpha = .5) +
-  #  ggtitle("Participant-level model (individual benefits)") +
-    ylim(0, 60)
+  
+  (p11 + p12)
 ```
 
 ## H1 baseline model
@@ -1142,23 +1094,23 @@ Dvs, main effect af intensity, ROI og trial,
 # NEW MODELS
 ```{r new models! H1 + H2}
 # null model
-m0 <- lmer(theta ~ 1 + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
+m0 <- lmer(theta ~ 1 + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
 
-m1 <- lmer(theta ~ ROI + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
+m1 <- lmer(theta ~ ROI + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
 
-m2 <- lmer(theta ~ ROI + trial + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
+m2 <- lmer(theta ~ ROI + trial + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
 
-m3 <- lmer(theta ~ ROI + trial + intensity + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
+m3 <- lmer(theta ~ ROI + trial + intensity + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
 
 # H1
-m4 <- lmer(theta ~ ROI*trial + intensity + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
+m4 <- lmer(theta ~ ROI*trial + intensity + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
 
-m5 <- lmer(theta ~ ROI*trial + intensity*ROI + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
+m5 <- lmer(theta ~ ROI*trial + intensity*ROI + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
 
 # H1 + H2
-m6 <- lmer(theta ~ ROI*trial + intensity*ROI + trial*intensity + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
+m6 <- lmer(theta ~ ROI*trial + intensity*ROI + trial*intensity + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
 
-m7 <- lmer(theta ~ intensity*trial*ROI + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
+m7 <- lmer(theta ~ intensity*trial*ROI + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
 ```
 
 
@@ -1191,6 +1143,7 @@ tab_model(m6)
 ```
 
 ```{r model summary and R-squared}
+MuMIn::r.squaredGLMM(m4)
 MuMIn::r.squaredGLMM(m6)
 MuMIn::r.squaredLR(m6)
 
@@ -1446,7 +1399,7 @@ p9+p10
 
 ### intensity*trial interaction 
 
-```{r plot, fig.width = 5, fig.height= 5}
+```{r plot, fig.width = 5, fig.height= 4}
 p7 <- df_long2_hbo %>% 
     group_by(
   ROI, trial, intensity
