@@ -578,7 +578,7 @@ I visual cortex er der signifikant forskel i aktiviteten udløst af visual og au
 
 ## H1 Plots Hbo + Hbr real data
 
-```{r best plots, fig.width=5, fig.height= 2.5}
+```{r best plots, fig.width=4}
 # hbo
 p1 <- df_long_hbo %>% 
     group_by(
@@ -593,10 +593,10 @@ p1 <- df_long_hbo %>%
     stat_summary(fun = 'mean', geom = 'line', color = 'gray55', aes(group = trial)) + 
   coord_cartesian(ylim = c(0, 2)) + 
   scale_x_discrete(
-    name = '', labels = c('auditory cortices', 'visual cortex')
+    name = '', labels = c('auditory cort.', 'visual cort.')
   ) +
   labs(
-    title = 'A) Signal across ROI and trial type', 
+    title = 'A) Signal across ROI & trial', 
     subtitle = 'Oxygenated hemoglobin (HbO)',
     y = expression('theta' ~ (Delta*mu*Mu))) + 
   scale_color_discrete(
@@ -626,15 +626,15 @@ p2 <- df_long_hbr %>%
     stat_summary(fun = 'mean', geom = 'line', color = 'gray55', aes(group = trial)) + 
   coord_cartesian(ylim = c(0, 2)) + 
   scale_x_discrete(
-    name = '', labels = c('auditory cortices', 'visual cortex')
+    name = '', labels = c('auditory cort.', 'visual cort.')
   ) +
   labs(
     subtitle = 'Deoxygenated hemoglobin (HbR)', # signal across ROIs and type of trial',
-    y = '') + #theta ()') + 
+    y = expression('theta' ~ (Delta*mu*Mu))) +
   scale_color_discrete(
     name = '',
     labels = c(
-      'Auditory stimuli', 'Visual stimuli'
+      'Auditory trials', 'Visual trials'
     )
   )  +theme(text = element_text(size = 12),
             axis.text.x = element_text(size = 12),
@@ -672,7 +672,7 @@ df_long_hbo %>%
   ) 
 ```
 
-```{r individual traces plots, fig.width=5, fig.height = 4}
+```{r individual traces plots ROI, fig.width=5, fig.height = 4}
 # testing sub rep plot
 
 # ROI på x-aksen
@@ -752,7 +752,7 @@ p5 <- df_long_hbo %>%
 
 
 
-```{r individual traces plots, fig.width = 4}
+```{r individual traces plots STIM, fig.width = 3.5}
 # STIM på x-aksen
   
   # auditory cortices
@@ -766,21 +766,27 @@ p5 <- df_long_hbo %>%
   ggplot() +
   aes(
     x = trial, y = theta, color = ROI, group = subject) +
-  stat_summary(fun = 'mean', geom = 'point', size = 2) + 
+  stat_summary(fun = 'mean', geom = 'point',color = 'turquoise', size = 2) + 
     #stat_summary(fun.data = "mean_se", geom = 'errorbar', width = .1) +
     stat_summary(fun = 'mean', geom = 'line', color = 'gray55', aes(group = subject)) + 
     stat_summary(fun = 'mean', geom = 'line', color = 'black', size = 1, aes(group = ROI)) + 
   #coord_cartesian(ylim = c(0, 2)) + 
-  #scale_x_discrete(
-  #  name = '', labels = c('auditory cortices', 'visual cortex')
-  #) +
+ scale_x_discrete(
+    name = '', labels = c('auditory trials', 'visual trials')
+  ) +
   labs(
-    title = 'Mean signal per subject across trial type', 
-    subtitle = 'Visual cortex (Hbo)',
+    title = 'C) Mean signal per subject', 
+    subtitle = 'Visual cortex (HbO)',
      y = expression('theta' ~ (Delta*mu*Mu))
   ) +
-    theme(legend.position = 'none')
+    theme(legend.position = 'none',
+          text = element_text(size = 12),
+            axis.text.x = element_text(size = 12),
+            axis.text.y = element_text(size = 12),
+            legend.text = element_text(size= 12)
+            )
   
+
   # VISUAL TRIALS
   p12 <-  df_long_hbo %>% 
   filter(
@@ -792,20 +798,26 @@ p5 <- df_long_hbo %>%
   ggplot() +
   aes(
     x = trial, y = theta, color = ROI, group = subject) +
-  stat_summary(fun = 'mean', geom = 'point',color = 'gray55', size = 2) + 
+  stat_summary(fun = 'mean', geom = 'point', size = 2) + 
     #stat_summary(fun.data = "mean_se", geom = 'errorbar', width = .1) +
-    stat_summary(fun = 'mean', geom = 'line', color = 'turquoise', aes(group = subject)) + 
+    stat_summary(fun = 'mean', geom = 'line', color = 'gray55', aes(group = subject)) + 
     stat_summary(fun = 'mean', geom = 'line', color = 'black', size = 1, aes(group = ROI)) + 
   #coord_cartesian(ylim = c(0, 2)) + 
-  #scale_x_discrete(
-  #  name = '', labels = c('auditory cortices', 'visual cortex')
-  #) +
+  scale_x_discrete(
+    name = '', labels = c('auditory trials', 'visual trials')
+  ) +
   labs(
    # title = 'Signal across trial type in visual cortex', 
-    subtitle = 'Auditory cortices (Hbo)',
+    subtitle = 'Auditory cortices (HbO)',
     y = expression('theta' ~ (Delta*mu*Mu))
+    #y = ''
   )+
-    theme(legend.position = 'none')
+    theme(legend.position = 'none',
+          text = element_text(size = 12),
+            axis.text.x = element_text(size = 12),
+            axis.text.y = element_text(size = 12),
+            legend.text = element_text(size= 12)
+            )
   
   (p11 + p12)
 ```
