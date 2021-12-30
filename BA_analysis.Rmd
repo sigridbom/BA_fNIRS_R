@@ -876,7 +876,8 @@ IC_trial.roi <- contrast(emm_trial.roi[[1]], method = "pairwise")
 # rbind(IC_r.d[1:4], adjust = "none")
 rbind(IC_roi.trial)
 rbind(IC_trial.roi)
-````
+```
+
 Hbr: lille effect i auditory trials mellem auditory og visual cortex
 
 trial contrast   estimate      SE  df z.ratio p.value
@@ -1050,6 +1051,19 @@ df_long2_hbr <- df_long2 %>%
 write_csv(df_long2, 'df_hyp2.csv')
 ```
 
+```{r new epochs/trial_no column}
+# random effect for aud and vis stim
+df_long2_hbo$trial_no <- rep(
+  1:8, 
+  times= 114,
+  each = length(unique(df_long2_hbo$cha_name)))
+
+df_long2_hbo <- df_long2_hbo %>% 
+  mutate(
+    trial_no = as.factor(trial_no)
+  )
+```
+
 ## model intensity real data
 ```{r relevel}
 # relevel in a really bad way but it works - neu, pos, neg
@@ -1106,23 +1120,23 @@ Dvs, main effect af intensity, ROI og trial,
 # NEW MODELS
 ```{r new models! H1 + H2}
 # null model
-m0 <- lmer(theta ~ 1 + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+m0 <- lmer(theta ~ 1 + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
 
-m1 <- lmer(theta ~ ROI + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+m1 <- lmer(theta ~ ROI + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
 
-m2 <- lmer(theta ~ ROI + trial + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+m2 <- lmer(theta ~ ROI + trial + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
 
-m3 <- lmer(theta ~ ROI + trial + intensity + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+m3 <- lmer(theta ~ ROI + trial + intensity + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
 
 # H1
-m4 <- lmer(theta ~ ROI*trial + intensity + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+m4 <- lmer(theta ~ ROI*trial + intensity + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
 
-m5 <- lmer(theta ~ ROI*trial + intensity*ROI + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+m5 <- lmer(theta ~ ROI*trial + intensity*ROI + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
 
 # H1 + H2
-m6 <- lmer(theta ~ ROI*trial + intensity*ROI + trial*intensity + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+m6 <- lmer(theta ~ ROI*trial + intensity*ROI + trial*intensity + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
 
-m7 <- lmer(theta ~ intensity*trial*ROI + (1|subject) + (1|cha_name), df_long2_hbr, REML = F)
+m7 <- lmer(theta ~ intensity*trial*ROI + (1|subject) + (1|cha_name), df_long2_hbo, REML = F)
 ```
 
 
